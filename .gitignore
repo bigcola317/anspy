@@ -1,0 +1,6 @@
+anspy/__pycache__/
+build/
+c/*.out
+c/*.o
+lib*
+*.egg-info/

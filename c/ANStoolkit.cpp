@@ -262,7 +262,7 @@ ANS init_binary(prec pr, int n){   // n binary distributions (m=2^n)
     ANS tmp; tmp.p = new prec[tmp.m = 1<<n];
     for(int i=0;i<tmp.m;i++){
         int j=i,s=0; while(j){s+=j&1;j>>=1;}; tmp.p[i]=pow(pr,s)*pow(1-pr,n-s);}
-    sort(tmp.p,tmp.p+tmp.m);                                // not needed!
+    // sort(tmp.p,tmp.p+tmp.m);                                // not needed!
     return tmp;
 }
 ANS init_power(prec rho, int n){   //p_i propto rho^i distribution

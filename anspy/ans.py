@@ -61,6 +61,7 @@ class BinaryANS():
 
 	def __configure(self, prob, bits, lnL):
 		symbol_spread = self.__getBinarySymbolSpread(prob, bits, lnL)
+		# print('spread:', symbol_spread)
 		self.__createTables(symbol_spread)
 
 
@@ -71,10 +72,10 @@ class BinaryANS():
 	def encode(self, sequence):
 		X = 0
 		x = self.__denormalize_state(X)
-		bits = []
+		bits = BitArray()
 		for symbol in reversed(sequence):
 			x, step_bits = self.__index_encodingTable(x, symbol)
-			bits.extend(step_bits)
+			bits += step_bits
 		X = self.__normalize_state(x)
 		return X, bits
 
@@ -105,9 +106,9 @@ class BinaryANS():
 	# Expects non-normalized state as input.
 	def __index_encodingTable(self, state, symbol):
 		maxXs = self.encoding_table[symbol][-1][0]
-		write_bits = []
+		write_bits = BitArray()
 		while state > maxXs:
-			write_bits.append(state%2)
+			write_bits += BitArray(bin=str(state%2))
 			state = state // 2 # state >> 1
 		for pstate, nstate in self.encoding_table[symbol]:
 			if state == pstate:
@@ -121,9 +122,12 @@ class BinaryANS():
 	# the decoding table. Also returns a flag which indicates
 	# if there actually was a symbol to read or if we reached the end.
 	def __index_decodingTable(self, state, bits):
+		state2 = state
 		while state < self.L:
-			state = state*2 + bits.pop()
-		done = (state==16 and len(bits)==0)
+			bit = bits[-1]
+			del bits[-1] # Pop last item
+			state = state*2 + bit
+		done = (state==16 and bits.len==0)
 		X = self.__normalize_state(state)
 		return self.decoding_table[X]['symbol'],\
 				self.decoding_table[X]['state'], done
