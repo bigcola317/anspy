@@ -76,7 +76,7 @@ struct ANS {
          pL[i]=p[i]*L; ip[i]=1/p[i];               // tabled for speedup
          q[i]=round(pL[i]); if(!q[i])q[i]++; used+=q[i];
          cc[i] = pow(pL[i]-q[i],2)*ip[i];                //L^2 (p_i-q_i)^2/p_i 
-     }
+     }     
      if(used!=L){                             //correction is needed
          int sgn=1; if(used > L) sgn=-1;     // direction of correction
          vector<pair<prec,avar>> v(m);      // heap of correction results of different symbols
@@ -281,59 +281,61 @@ ANS init_rand_unif(int n){   // simple random distribution
 
 int main()    // currently: single test
 {// choose probability distribution
-ANS test=init_binary(0.2,1);         // n binary  variables,  m=2^n             
+ANS test=init_binary(0.2,4);         // n binary  variables,  m=2^n             
 // ANS test=init_power(0.99,256);    // p_i ~ rho^i,  m=256
 //ANS test=init_rand_unif(256);      // m = 256
-// test.printp();
+test.printp();
 // sort(test.p,test.p+test.m,greater<float>());
-test.quantize_prec(5);                        // choose quantization
-// test.quantize_fast(12);                      // L = 2^value
-// test.printq();
+// test.quantize_prec(5);                    // choose quantization
+// For the moment use fast, precise has a bug
+test.quantize_prec(8);                      // L = 2^value
+test.printq();
 int sum=0; for(int i=0;i<test.m;i++)sum+=test.q[i];   // test quantizer
 if(sum!=test.L)cout<<"quantizer error: sums to "<<sum<<endl;
 test.calc_h();                              // find entropies
-//test.spread_fast();                       // choose symbol spread
+test.spread_fast();                       // choose symbol spread
 //test.spread_prec();
 //test.spread_tuned();
 //test.spread_range();
 //test.spread_tuned_s();
-// test.prints();
-//test.find_sp();                             // find stationary probability and hANS
+test.prints();
+test.find_sp();                             // find stationary probability and hANS
+cout<<"Entropy for tANS " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
 
-cout<<"Size m="<<test.m<<" alphabet with ENTROPY H="<<test.h<<endl;
-if(test.m < 20) test.printp();
-cout<<"HUFFMAN uses " << test.hhuff <<" ~ (1 + "<<(test.hhuff-test.h)/test.h<<
-        ")H bits/symbol for depth "<< test.huff_depth<<" tree ("<<pow(2,test.huff_depth)<<" states)" <<endl; 
-cout<<"We first QUANTIZE it to fractions with denominator L="<<test.L<<endl;
-if(test.m < 20) test.printq();
-cout<<"Entropy for QUANTIZATION grows to " <<test.hq<< " ~ (1 + "<<(test.hq-test.h)/test.h<<")H bits/symbol"<< endl;
-cout<<"Then perform symbol spread"<<endl;
+// cout<<"Size m="<<test.m<<" alphabet with ENTROPY H="<<test.h<<endl;
+// if(test.m < 20) test.printp();
+// cout<<"HUFFMAN uses " << test.hhuff <<" ~ (1 + "<<(test.hhuff-test.h)/test.h<<
+//         ")H bits/symbol for depth "<< test.huff_depth<<" tree ("<<pow(2,test.huff_depth)<<" states)" <<endl; 
+// cout<<"We first QUANTIZE it to fractions with denominator L="<<test.L<<endl;
+// if(test.m < 20) test.printq();
+// cout<<"Entropy for QUANTIZATION grows to " <<test.hq<< " ~ (1 + "<<(test.hq-test.h)/test.h<<")H bits/symbol"<< endl;
+// cout<<"Then perform symbol spread"<<endl;
 
-if(test.m==2){cout<<"spread_uABS() - "; test.spread_uABS(); test.find_sp();
-    test.prints(); cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;}
-cout<<"spread_range_i() - "; test.spread_range_i(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-cout<<"spread_range_d() - "; test.spread_range_d(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-cout<<"spread_fast() - "; test.spread_fast(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-cout<<"spread_prec() - "; test.spread_prec(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-cout<<"spread_tuned() - "; test.spread_tuned(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-cout<<"spread_tuned_s() - "; test.spread_tuned_s(); test.find_sp();
-if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-test.scrambler0(12); test.find_sp();
-cout<<"after scrambler0(): "; if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
-test.scrambler1(12); test.find_sp();
-cout<<"after scrambler1(): "; if(test.m < 11) test.prints();
-cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// if(test.m==2){cout<<"spread_uABS() - "; test.spread_uABS(); test.find_sp();
+//     test.prints(); cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;}
+// cout<<"spread_range_i() - "; test.spread_range_i(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// cout<<"spread_range_d() - "; test.spread_range_d(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// cout<<"spread_fast() - "; test.spread_fast(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// cout<<"spread_prec() - "; test.spread_prec(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// cout<<"spread_tuned() - "; test.spread_tuned(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// cout<<"spread_tuned_s() - "; test.spread_tuned_s(); test.find_sp();
+// if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// test.scrambler0(12); test.find_sp();
+// cout<<"after scrambler0(): "; if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
+// test.scrambler1(12); test.find_sp();
+// cout<<"after scrambler1(): "; if(test.m < 11) test.prints();
+// cout<<"Entropy for its tANS is " <<test.hANS<< " ~ (1 + "<<(test.hANS-test.h)/test.h<<")H bits/symbol"<<endl;
 return 0;
 }
