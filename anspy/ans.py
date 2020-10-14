@@ -65,13 +65,14 @@ class BinaryANS():
 
 
 	# Sequence expected as a list of symbols.
-	# Returns the state in normalized form and
-	# the bitstream.
+	# Encodes the sequence in backward direction so that the decoding
+	# can be done in forward direction.
+	# Returns the state in normalized form and the bitstream.
 	def encode(self, sequence):
 		X = 0
 		x = self.__denormalize_state(X)
 		bits = []
-		for symbol in sequence:
+		for symbol in reversed(sequence):
 			x, step_bits = self.__index_encodingTable(x, symbol)
 			bits.extend(step_bits)
 		X = self.__normalize_state(x)
@@ -126,10 +127,3 @@ class BinaryANS():
 		X = self.__normalize_state(state)
 		return self.decoding_table[X]['symbol'],\
 				self.decoding_table[X]['state'], done
-
-
-		
-# b = BitArray(bin='01001')
-# bans = BinaryANS(prob=0.2, bits=2, lnL=4)
-# state, bits = bans.encode([0, 1, 2, 1, 3, 3, 1, 2, 2, 0, 0, 1, 1, 0])
-# print(bans.decode(state, bits))
