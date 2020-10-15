@@ -5,17 +5,25 @@ from bitstring import BitArray
 import sys
 import os
 from pathlib import Path
+from abc import ABC, abstractmethod
+import array
 
 
-# Creates an ANS for binary strings of length `bits`
-# with probability `prob` of an asserted bit. The precision
-# in the probability quantization is given by `lnL`.
-class BinaryANS():
+# Base class for any ANS system. Provides base functionality
+# from a defined symbol spread to encoding/decoding.
+# Extensions provide their own custom symbol spread via the 
+# abstract `_getSymbolSpread()` method. Symbols are assumed to be coded
+# by their enumeration i.e. mapped to the natural numbers [0, n_symbols).
+# Symbol spread length `L`, which determines the precision of the probability
+# quantization, is set through `lnL` and given by self.L = 2**lnL
+class BaseANS(ABC):
 
-	def __init__(self, prob, bits, lnL):
+	# Inherited classes should call super().__init__() at the
+	# end of their own __init__()
+	def __init__(self, lnL):
 		self.ffi = cffi.FFI()
 		self.ffi.cdef("""
-				int add(int a, int b);
+				int* getCustomSymbolSpread(float* prob, int m, int lnL);
 				int* getBinarySymbolSpread(float prob, int bits, int lnL);
 			""")
 		# Find libans shared library
@@ -25,12 +33,16 @@ class BinaryANS():
 		# Dynamically link shared library
 		self.C = self.ffi.dlopen(str(libpath.resolve()))
 		# Initialize the class
-		self.__configure(prob, bits, lnL)
-
-
-	def __getBinarySymbolSpread(self, prob, bits, lnL):
+		self.lnL = lnL
 		self.L = 2**lnL
-		return self.ffi.unpack(self.C.getBinarySymbolSpread(prob, bits, lnL), self.L)
+		self.__configure()
+
+
+	# Override in inherited classes, must return the symbol spread
+	# as a list of symbols.
+	@abstractmethod
+	def _getSymbolSpread(self):
+		pass
 
 
 	def __createTables(self, symbol_spread):
@@ -58,9 +70,9 @@ class BinaryANS():
 			self.encoding_table[symbol] = transition_pairs
 		# print('Encoding table:', self.encoding_table)
 
-
-	def __configure(self, prob, bits, lnL):
-		symbol_spread = self.__getBinarySymbolSpread(prob, bits, lnL)
+	
+	def __configure(self):
+		symbol_spread = self._getSymbolSpread()
 		# print('spread:', symbol_spread)
 		self.__createTables(symbol_spread)
 
@@ -131,3 +143,41 @@ class BinaryANS():
 		X = self.__normalize_state(state)
 		return self.decoding_table[X]['symbol'],\
 				self.decoding_table[X]['state'], done
+
+
+
+# Creates an ANS for binary strings of length `bits`
+# with probability `prob` of an asserted bit. The precision
+# in the probability quantization is given by `lnL`.
+class BinaryANS(BaseANS):
+
+	def __init__(self, prob, bits, lnL):
+		self.prob = prob
+		self.bits = bits
+		super().__init__(lnL)
+
+
+	def _getSymbolSpread(self):
+		return self.ffi.unpack(
+			self.C.getBinarySymbolSpread(self.prob, self.bits, self.lnL), self.L)
+
+
+
+# Wrapper around BaseANS which provides base functionality
+# from a defined alphabet (and associated symbol probabilities `prob`)
+# to encoding/decoding. `prob` specifies the probabilities of the
+# symbols in the order of their enumeration.
+class CustomANS(BaseANS):
+
+	def __init__(self, prob, lnL):
+		self.prob = prob
+		super().__init__(lnL)
+
+
+	def _getSymbolSpread(self):
+		# Convert `prob` to a cdata pointer
+		prob = array.array('d', self.prob)
+		prob = self.ffi.from_buffer('float[]', prob)
+		# Invoke C library function
+		return self.ffi.unpack(
+			self.C.getCustomSymbolSpread(prob, len(self.prob), self.lnL), self.L)		

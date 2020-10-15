@@ -278,10 +278,20 @@ ANS init_rand_unif(int n){   // simple random distribution
     sort(tmp.p,tmp.p+tmp.m);                                // not needed!
     return tmp;
 }
+// Custom probability distribution pr, of length m
+ANS init_from_distribution(prec* pr, int m) {
+    ANS tmp; 
+    tmp.p = new prec[tmp.m = m];
+    for (int i=0; i<m; i++) tmp.p[i] = pr[i];
+    return tmp;
+}
 
 int main()    // currently: single test
 {// choose probability distribution
-ANS test=init_binary(0.2,4);         // n binary  variables,  m=2^n             
+int m = 10;
+prec pr[] = {0.8, 0.0, 0.01, 0.01, 0.08, 0.0, 0.0, 0.05, 0.03, 0.02};
+ANS test = init_from_distribution(pr, m);
+// ANS test=init_binary(0.2,4);         // n binary  variables,  m=2^n             
 // ANS test=init_power(0.99,256);    // p_i ~ rho^i,  m=256
 //ANS test=init_rand_unif(256);      // m = 256
 test.printp();
