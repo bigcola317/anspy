@@ -72,9 +72,9 @@ class BaseANS(ABC):
 
 	
 	def __configure(self):
-		symbol_spread = self._getSymbolSpread()
+		self.symbol_spread = self._getSymbolSpread()
 		# print('spread:', symbol_spread)
-		self.__createTables(symbol_spread)
+		self.__createTables(self.symbol_spread)
 
 
 	# Sequence expected as a list of symbols.
@@ -85,6 +85,8 @@ class BaseANS(ABC):
 		X = 0
 		x = self.__denormalize_state(X)
 		bits = BitArray()
+		# print(self.symbol_spread)
+		# print(self.encoding_table)
 		for symbol in reversed(sequence):
 			x, step_bits = self.__index_encodingTable(x, symbol)
 			bits += step_bits

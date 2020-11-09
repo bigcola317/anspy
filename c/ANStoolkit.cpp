@@ -288,8 +288,12 @@ ANS init_from_distribution(prec* pr, int m) {
 
 int main()    // currently: single test
 {// choose probability distribution
-int m = 10;
-prec pr[] = {0.8, 0.0, 0.01, 0.01, 0.08, 0.0, 0.0, 0.05, 0.03, 0.02};
+int m = 4;
+prec pr[] = {
+  0.39503761574074076, 
+  0.11436631944444445, 
+  0.10901331018518519, 
+  0.38158275462962965};
 ANS test = init_from_distribution(pr, m);
 // ANS test=init_binary(0.2,4);         // n binary  variables,  m=2^n             
 // ANS test=init_power(0.99,256);    // p_i ~ rho^i,  m=256
@@ -298,7 +302,7 @@ test.printp();
 // sort(test.p,test.p+test.m,greater<float>());
 // test.quantize_prec(5);                    // choose quantization
 // For the moment use fast, precise has a bug
-test.quantize_prec(8);                      // L = 2^value
+test.quantize_prec(3);                      // L = 2^value
 test.printq();
 int sum=0; for(int i=0;i<test.m;i++)sum+=test.q[i];   // test quantizer
 if(sum!=test.L)cout<<"quantizer error: sums to "<<sum<<endl;
